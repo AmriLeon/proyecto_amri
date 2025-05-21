@@ -97,8 +97,15 @@ void enviar_examen_academico(int sock, const char* matricula) {
     int num_espanol = cargar_preguntas("preguntas_espanol.txt", preguntas_espanol);
     int num_ingles = cargar_preguntas("preguntas_ingles.txt", preguntas_ingles);
     
+    if (num_mate == 0 || num_espanol == 0 || num_ingles == 0) {
+        char* mensaje = "Error: No se pudieron cargar las preguntas del examen";
+        send(sock, mensaje, strlen(mensaje), 0);
+        return;
+    }
+    
     ResultadoAcademico resultado = {0, 0, 0, 0.0};
     
+    // Enviar número de preguntas
     send(sock, &num_mate, sizeof(int), 0);
     send(sock, &num_espanol, sizeof(int), 0);
     send(sock, &num_ingles, sizeof(int), 0);

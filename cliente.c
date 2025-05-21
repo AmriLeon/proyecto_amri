@@ -108,6 +108,21 @@ void mostrar_menu() {
 
 void realizar_examen_academico(int sock) {
     int num_mate, num_espanol, num_ingles;
+    char buffer[MAX_BUFFER];
+    
+    // Recibir número de preguntas o mensaje de error
+    int bytes_recibidos = recv(sock, buffer, sizeof(buffer), MSG_PEEK);
+    if (bytes_recibidos < sizeof(int)) {
+        // Si recibimos un mensaje de error
+        recv(sock, buffer, MAX_BUFFER, 0);
+        printf("\n\033[1;31m%s\033[0m\n", buffer);
+        printf("\nPresiona Enter para continuar...");
+        getchar();
+        getchar();
+        return;
+    }
+    
+    // Si no hay error, recibir número de preguntas
     recv(sock, &num_mate, sizeof(int), 0);
     recv(sock, &num_espanol, sizeof(int), 0);
     recv(sock, &num_ingles, sizeof(int), 0);
