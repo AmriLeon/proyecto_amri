@@ -6,7 +6,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <ctype.h>
 
 #define PORT 8080
 #define MAX_BUFFER 1024
@@ -351,27 +350,11 @@ void enviar_test_psicometrico(int sock) {
     send(sock, &resultado, sizeof(ResultadoPsicometrico), 0);
 }
 
-// Variable global para contar clientes activos
-static int clientes_activos = 0;
-pthread_mutex_t mutex_clientes = PTHREAD_MUTEX_INITIALIZER;
-
 void *manejar_cliente(void *socket_desc) {
     int sock = *(int*)socket_desc;
     char buffer[MAX_BUFFER] = {0};
     int opcion;
     char matricula[20] = {0};
-    
-    // Obtener información del cliente
-    struct sockaddr_in addr;
-    socklen_t addr_size = sizeof(struct sockaddr_in);
-    getpeername(sock, (struct sockaddr *)&addr, &addr_size);
-    
-    // Incrementar contador de clientes
-    pthread_mutex_lock(&mutex_clientes);
-    clientes_activos++;
-    printf("\033[1;32m[+] Nueva conexión desde %s:%d (Clientes activos: %d)\033[0m\n", 
-           inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), clientes_activos);
-    pthread_mutex_unlock(&mutex_clientes);
     
     while(1) {
         // Recibir opción del menú
@@ -384,11 +367,8 @@ void *manejar_cliente(void *socket_desc) {
             break;
         }
         
-        // Registrar la acción del cliente
-        printf("\033[1;34m[*] Cliente %s:%d - ", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
         switch(opcion) {
             case 1: {
-                printf("Iniciando registro de usuario\033[0m\n");
                 Usuario usuario;
                 recv(sock, &usuario, sizeof(Usuario), 0);
                 
@@ -409,42 +389,28 @@ void *manejar_cliente(void *socket_desc) {
                 // Enviar confirmación
                 char *mensaje = "Registro exitoso";
                 send(sock, mensaje, strlen(mensaje), 0);
-                printf("\033[1;32m[+] Usuario registrado exitosamente\033[0m\n");
                 break;
             }
             case 2: {
                 // Recibir matrícula
                 recv(sock, matricula, sizeof(matricula), 0);
-                printf("Iniciando test psicométrico para matrícula %s\033[0m\n", matricula);
                 enviar_test_psicometrico(sock);
-                printf("\033[1;32m[+] Test psicométrico completado para matrícula %s\033[0m\n", matricula);
                 break;
             }
             case 3: {
                 // Recibir matrícula
                 recv(sock, matricula, sizeof(matricula), 0);
-                printf("Iniciando examen académico para matrícula %s\033[0m\n", matricula);
                 enviar_examen_academico(sock, matricula);
-                printf("\033[1;32m[+] Examen académico completado para matrícula %s\033[0m\n", matricula);
                 break;
             }
             case 4: {
                 // Recibir matrícula
                 recv(sock, matricula, sizeof(matricula), 0);
-                printf("Consultando kardex para matrícula %s\033[0m\n", matricula);
                 enviar_kardex(sock, matricula);
-                printf("\033[1;32m[+] Consulta de kardex completada para matrícula %s\033[0m\n", matricula);
                 break;
             }
         }
     }
-    
-    // Decrementar contador de clientes
-    pthread_mutex_lock(&mutex_clientes);
-    clientes_activos--;
-    printf("\033[1;31m[-] Cliente %s:%d desconectado (Clientes activos: %d)\033[0m\n", 
-           inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), clientes_activos);
-    pthread_mutex_unlock(&mutex_clientes);
     
     free(socket_desc);
     close(sock);
