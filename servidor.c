@@ -48,22 +48,6 @@ typedef struct {
     char respuesta;
 } Pregunta;
 
-// Estructura para resultados del examen académico
-typedef struct {
-    int matematicas;
-    int espanol;
-    int ingles;
-    float promedio;
-} ResultadoAcademico;
-
-// Estructura para resultados del test psicométrico
-typedef struct {
-    int correctas;
-    int total;
-    float porcentaje;
-    char fecha[20];
-} ResultadoPsicometrico;
-
 // Estructura para el kardex completo
 typedef struct {
     char matricula[20];
@@ -73,157 +57,37 @@ typedef struct {
 
 // Función para cargar preguntas desde archivo
 int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
-<<<<<<< HEAD
-    // Verificar si el archivo existe
-    if (access(archivo, F_OK) != 0) {
-        printf("Error: El archivo %s no existe\n", archivo);
-        return 0;
-    }
-
-    // Verificar si el archivo es legible
-    if (access(archivo, R_OK) != 0) {
-        printf("Error: No se tienen permisos de lectura para el archivo %s\n", archivo);
-        return 0;
-    }
-
-    FILE* f = fopen(archivo, "r");
-    if (!f) {
-        printf("Error al abrir el archivo: %s\n", archivo);
-        return 0;
-    }
-=======
     FILE* f = fopen(archivo, "r");
     if (!f) return 0;
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
     
     int count = 0;
     char linea[512];
     
-<<<<<<< HEAD
-    while (total_preguntas < MAX_PREGUNTAS * 2) {
-        // Leer la pregunta
-        if (!fgets(linea, sizeof(linea), f)) break;
-        
-        // Eliminar el salto de línea y espacios en blanco
-        size_t len = strlen(linea);
-        while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
-            linea[--len] = '\0';
-        }
-        
-        if (len <= 1) continue;
-        
-        // Verificar que la pregunta no esté vacía
-        if (strlen(linea) == 0) continue;
-        
-        // Copiar la pregunta
-        strncpy(todas_preguntas[total_preguntas].pregunta, linea, sizeof(todas_preguntas[total_preguntas].pregunta) - 1);
-        todas_preguntas[total_preguntas].pregunta[sizeof(todas_preguntas[total_preguntas].pregunta) - 1] = '\0';
-        
-        // Leer y validar las tres opciones
-        int opciones_leidas = 0;
-        int opciones_validas = 1;
-        
-        for (int i = 0; i < 3; i++) {
-            if (!fgets(linea, sizeof(linea), f)) {
-                opciones_validas = 0;
-                break;
-            }
-            
-            // Eliminar el salto de línea y espacios en blanco
-            len = strlen(linea);
-            while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
-                linea[--len] = '\0';
-            }
-            
-            // Validar formato de opción (A), B), C))
-            if (len < 3 || linea[0] != 'A' + i || linea[1] != ')' || linea[2] != ' ') {
-                opciones_validas = 0;
-                break;
-=======
     while (count < MAX_PREGUNTAS && fgets(linea, sizeof(linea), f)) {
         if (strlen(linea) <= 1) continue;
         strcpy(preguntas[count].pregunta, linea);
         
-        // Leer opciones
         for (int i = 0; i < 3; i++) {
             if (!fgets(linea, sizeof(linea), f)) break;
             if (strlen(linea) > 2) {
                 strcpy(preguntas[count].opciones[i], linea + 3);
-                preguntas[count].opciones[i][strlen(preguntas[count].opciones[i])-1] = '\0';
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
+                preguntas[count].opciones[i][strlen(preguntas[count].opciones[i]) - 1] = '\0';
             }
-            
-            // Copiar la opción sin el prefijo
-            strncpy(todas_preguntas[total_preguntas].opciones[i], linea + 3, sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1);
-            todas_preguntas[total_preguntas].opciones[i][sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1] = '\0';
-            opciones_leidas++;
         }
         
-<<<<<<< HEAD
-        // Leer y validar la respuesta
-        if (opciones_validas && opciones_leidas == 3 && fgets(linea, sizeof(linea), f)) {
-            // Eliminar el salto de línea y espacios en blanco
-            len = strlen(linea);
-            while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
-                linea[--len] = '\0';
-            }
-            
-            // Validar formato de respuesta
-            if (strncmp(linea, "RESPUESTA: ", 11) == 0) {
-                char respuesta = toupper(linea[10]);
-                if (respuesta >= 'A' && respuesta <= 'C') {
-                    todas_preguntas[total_preguntas].respuesta = respuesta;
-                    total_preguntas++;
-                }
-=======
-        // Leer respuesta
         if (fgets(linea, sizeof(linea), f)) {
             if (strncmp(linea, "RESPUESTA:", 10) == 0) {
                 preguntas[count].respuesta = linea[10];
                 count++;
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
             }
         }
     }
     
     fclose(f);
-<<<<<<< HEAD
-    
-    if (total_preguntas == 0) {
-        printf("Error: No se encontraron preguntas válidas en el archivo %s. Verifique el formato del archivo\n", archivo);
-        fclose(f);
-        return 0;
-    }
-
-    // Verificar que el archivo no esté vacío
-    if (ftell(f) == 0) {
-        printf("Error: El archivo %s está vacío\n", archivo);
-        fclose(f);
-        return 0;
-    }
-    
-    // Seleccionar aleatoriamente MAX_PREGUNTAS preguntas
-    int num_preguntas_seleccionar = (total_preguntas < MAX_PREGUNTAS) ? total_preguntas : MAX_PREGUNTAS;
-    int preguntas_seleccionadas = 0;
-    int indices_usados[MAX_PREGUNTAS * 2] = {0};
-    
-    while (preguntas_seleccionadas < num_preguntas_seleccionar) {
-        int indice_aleatorio = rand() % total_preguntas;
-        
-        if (!indices_usados[indice_aleatorio]) {
-            preguntas[preguntas_seleccionadas] = todas_preguntas[indice_aleatorio];
-            indices_usados[indice_aleatorio] = 1;
-            preguntas_seleccionadas++;
-        }
-    }
-    
-    return num_preguntas_seleccionar;
-=======
     return count;
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
 }
 
-// Función para manejar la conexión con el cliente
+// Función para manejar el examen académico
 void enviar_examen_academico(int sock, const char* matricula) {
     Pregunta preguntas_mate[MAX_PREGUNTAS];
     Pregunta preguntas_espanol[MAX_PREGUNTAS];
@@ -235,12 +99,10 @@ void enviar_examen_academico(int sock, const char* matricula) {
     
     ResultadoAcademico resultado = {0, 0, 0, 0.0};
     
-    // Enviar número total de preguntas por materia
     send(sock, &num_mate, sizeof(int), 0);
     send(sock, &num_espanol, sizeof(int), 0);
     send(sock, &num_ingles, sizeof(int), 0);
     
-    // Enviar y procesar preguntas de matemáticas
     for (int i = 0; i < num_mate; i++) {
         send(sock, &preguntas_mate[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
@@ -250,7 +112,6 @@ void enviar_examen_academico(int sock, const char* matricula) {
         }
     }
     
-    // Enviar y procesar preguntas de español
     for (int i = 0; i < num_espanol; i++) {
         send(sock, &preguntas_espanol[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
@@ -260,7 +121,6 @@ void enviar_examen_academico(int sock, const char* matricula) {
         }
     }
     
-    // Enviar y procesar preguntas de inglés
     for (int i = 0; i < num_ingles; i++) {
         send(sock, &preguntas_ingles[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
@@ -270,17 +130,15 @@ void enviar_examen_academico(int sock, const char* matricula) {
         }
     }
     
-    // Calcular promedio
     resultado.promedio = (float)(resultado.matematicas + resultado.espanol + resultado.ingles) / 3.0;
-    
-    // Guardar resultado en el kardex
-    ResultadoPsicometrico resultado_psico = {0}; // Resultado vacío para el kardex
+
+    ResultadoPsicometrico resultado_psico = {0}; // vacío temporal
     guardar_kardex(matricula, &resultado, &resultado_psico);
-    
-    // Enviar resultados al cliente
+
     send(sock, &resultado, sizeof(ResultadoAcademico), 0);
 }
 
+// Función para guardar resultados en archivo
 void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico) {
     FILE* f = fopen("kardex.txt", "a");
     if (f != NULL) {
@@ -298,9 +156,10 @@ void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academi
     }
 }
 
+// Función para enviar kardex por matrícula
 void enviar_kardex(int sock, const char* matricula) {
     FILE* f = fopen("kardex.txt", "r");
-    if (f == NULL) {
+    if (!f) {
         char* mensaje = "No hay registros disponibles";
         send(sock, mensaje, strlen(mensaje), 0);
         return;
@@ -339,61 +198,53 @@ void enviar_kardex(int sock, const char* matricula) {
     fclose(f);
 }
 
+// Función para test psicométrico
 void enviar_test_psicometrico(int sock) {
     Pregunta preguntas_visual[MAX_PREGUNTAS];
     Pregunta preguntas_razon[MAX_PREGUNTAS];
     int num_visual = cargar_preguntas("preguntas_visual.txt", preguntas_visual);
     int num_razon = cargar_preguntas("preguntas_razonamiento.txt", preguntas_razon);
     
-    // Enviar número total de preguntas
     int total = num_visual + num_razon;
     send(sock, &total, sizeof(int), 0);
     
     int correctas = 0;
     
-    // Enviar preguntas visuales
     for (int i = 0; i < num_visual; i++) {
         send(sock, &preguntas_visual[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
         recv(sock, &respuesta_usuario, 1, 0);
-        
-        // Enviar si es correcta
         char es_correcta = (respuesta_usuario == preguntas_visual[i].respuesta);
         if (es_correcta) correctas++;
         send(sock, &es_correcta, 1, 0);
     }
     
-    // Enviar preguntas de razonamiento
     for (int i = 0; i < num_razon; i++) {
         send(sock, &preguntas_razon[i], sizeof(Pregunta), 0);
         char respuesta_usuario;
         recv(sock, &respuesta_usuario, 1, 0);
-        
-        // Enviar si es correcta
         char es_correcta = (respuesta_usuario == preguntas_razon[i].respuesta);
         if (es_correcta) correctas++;
         send(sock, &es_correcta, 1, 0);
     }
-    
-    // Guardar resultados
+
     ResultadoPsicometrico resultado = {
         correctas,
         total,
         (float)correctas / total * 100,
-        "" // La fecha se establecerá en el cliente
+        "" // El cliente debe llenar la fecha
     };
-    
-    // Enviar resultado completo al cliente
+
     send(sock, &resultado, sizeof(ResultadoPsicometrico), 0);
 }
 
+// Hilo de cliente
 void *manejar_cliente(void *socket_desc) {
     int sock = *(int*)socket_desc;
     char buffer[MAX_BUFFER] = {0};
     int opcion;
     char matricula[20] = {0};
     
-    // Recibir opción del menú
     recv(sock, &opcion, sizeof(int), 0);
     
     switch(opcion) {
@@ -401,7 +252,6 @@ void *manejar_cliente(void *socket_desc) {
             Usuario usuario;
             recv(sock, &usuario, sizeof(Usuario), 0);
             
-            // Guardar en archivo
             FILE *f = fopen("registros.txt", "a");
             if (f != NULL) {
                 fprintf(f, "%s,%s,%s,%d,%c,%d,%s\n", 
@@ -415,25 +265,21 @@ void *manejar_cliente(void *socket_desc) {
                 fclose(f);
             }
             
-            // Enviar confirmación
             char *mensaje = "Registro exitoso";
             send(sock, mensaje, strlen(mensaje), 0);
             break;
         }
         case 2: {
-            // Recibir matrícula
             recv(sock, matricula, sizeof(matricula), 0);
             enviar_test_psicometrico(sock);
             break;
         }
         case 3: {
-            // Recibir matrícula
             recv(sock, matricula, sizeof(matricula), 0);
             enviar_examen_academico(sock, matricula);
             break;
         }
         case 4: {
-            // Recibir matrícula
             recv(sock, matricula, sizeof(matricula), 0);
             enviar_kardex(sock, matricula);
             break;
@@ -451,13 +297,11 @@ int main() {
     int opt = 1;
     int addrlen = sizeof(address);
     
-    // Crear socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("Error al crear socket");
         exit(EXIT_FAILURE);
     }
     
-    // Configurar socket
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
@@ -467,13 +311,11 @@ int main() {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
     
-    // Vincular socket
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("Error en bind");
         exit(EXIT_FAILURE);
     }
     
-    // Escuchar conexiones
     if (listen(server_fd, 3) < 0) {
         perror("Error en listen");
         exit(EXIT_FAILURE);
@@ -481,7 +323,7 @@ int main() {
     
     printf("\033[1;34mServidor iniciado. Esperando conexiones...\033[0m\n");
     
-    while(1) {
+    while (1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("Error en accept");
             exit(EXIT_FAILURE);
@@ -491,12 +333,12 @@ int main() {
         *new_sock = new_socket;
         
         pthread_t thread_id;
-        if(pthread_create(&thread_id, NULL, manejar_cliente, (void*)new_sock) < 0) {
+        if (pthread_create(&thread_id, NULL, manejar_cliente, (void*)new_sock) < 0) {
             perror("Error al crear thread");
             return 1;
         }
         pthread_detach(thread_id);
     }
-    
+
     return 0;
 }

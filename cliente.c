@@ -108,70 +108,11 @@ void mostrar_menu() {
 
 void realizar_examen_academico(int sock) {
     int num_mate, num_espanol, num_ingles;
-    if (recv(sock, &num_mate, sizeof(int), 0) <= 0 ||
-        recv(sock, &num_espanol, sizeof(int), 0) <= 0 ||
-        recv(sock, &num_ingles, sizeof(int), 0) <= 0) {
-        printf("\033[1;31mError al recibir el número de preguntas\033[0m\n");
-        return;
-    }
-    
-    // Verificar que se recibieron números válidos de preguntas
-    if (num_mate <= 0 || num_espanol <= 0 || num_ingles <= 0) {
-        printf("\033[1;31mNúmero de preguntas inválido recibido del servidor\033[0m\n");
-        return;
-    }
+    recv(sock, &num_mate, sizeof(int), 0);
+    recv(sock, &num_espanol, sizeof(int), 0);
+    recv(sock, &num_ingles, sizeof(int), 0);
     
     Pregunta pregunta;
-<<<<<<< HEAD
-    ResultadoAcademico resultado = {0};
-    
-    // Función auxiliar para manejar una sección del examen
-    int realizar_seccion(const char* titulo, int num_preguntas) {
-        printf("\n\033[1;32m=== %s ===\033[0m\n\n", titulo);
-        for (int i = 0; i < num_preguntas; i++) {
-            ssize_t bytes_recibidos = recv(sock, &pregunta, sizeof(Pregunta), 0);
-            if (bytes_recibidos <= 0) {
-                printf("\033[1;31mError al recibir la pregunta %d\033[0m\n", i + 1);
-                return 0;
-            }
-            if (bytes_recibidos != sizeof(Pregunta)) {
-                printf("\033[1;31mError: datos de pregunta incompletos\033[0m\n");
-                return 0;
-            }
-            
-            // Validar que la pregunta y opciones no estén vacías
-            if (strlen(pregunta.pregunta) == 0 || 
-                strlen(pregunta.opciones[0]) == 0 ||
-                strlen(pregunta.opciones[1]) == 0 ||
-                strlen(pregunta.opciones[2]) == 0) {
-                printf("\033[1;31mError: pregunta o opciones inválidas\033[0m\n");
-                return 0;
-            }
-            
-            printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-            printf("A) %s\n", pregunta.opciones[0]);
-            printf("B) %s\n", pregunta.opciones[1]);
-            printf("C) %s\n", pregunta.opciones[2]);
-            
-            char respuesta;
-            do {
-                printf("Tu respuesta (A/B/C): ");
-                scanf(" %c", &respuesta);
-                respuesta = toupper(respuesta);
-                
-                // Limpiar el buffer de entrada
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF);
-                
-            } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
-            
-            if (send(sock, &respuesta, 1, 0) <= 0) {
-                printf("\033[1;31mError al enviar la respuesta\033[0m\n");
-                return 0;
-            }
-        }
-        return 1;
-=======
     ResultadoAcademico resultado;
     
     printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
@@ -191,31 +132,48 @@ void realizar_examen_academico(int sock) {
         } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
         
         send(sock, &respuesta, 1, 0);
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
     }
     
-    // Realizar cada sección del examen
-    if (!realizar_seccion("EXAMEN DE MATEMÁTICAS", num_mate) ||
-        !realizar_seccion("EXAMEN DE ESPAÑOL", num_espanol) ||
-        !realizar_seccion("EXAMEN DE INGLÉS", num_ingles)) {
-        printf("\033[1;31mEl examen no pudo completarse debido a errores\033[0m\n");
-        printf("\nPresiona Enter para continuar...");
-        while (getchar() != '\n');
-        getchar();
-        limpiar_pantalla();
-        return;
+    printf("\n\033[1;32m=== EXAMEN DE ESPAÑOL ===\033[0m\n\n");
+    for (int i = 0; i < num_espanol; i++) {
+        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        
+        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
+        printf("A) %s\n", pregunta.opciones[0]);
+        printf("B) %s\n", pregunta.opciones[1]);
+        printf("C) %s\n", pregunta.opciones[2]);
+        
+        char respuesta;
+        do {
+            printf("Tu respuesta (A/B/C): ");
+            scanf(" %c", &respuesta);
+            respuesta = toupper(respuesta);
+        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
+        
+        send(sock, &respuesta, 1, 0);
+    }
+    
+    printf("\n\033[1;32m=== EXAMEN DE INGLÉS ===\033[0m\n\n");
+    for (int i = 0; i < num_ingles; i++) {
+        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        
+        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
+        printf("A) %s\n", pregunta.opciones[0]);
+        printf("B) %s\n", pregunta.opciones[1]);
+        printf("C) %s\n", pregunta.opciones[2]);
+        
+        char respuesta;
+        do {
+            printf("Tu respuesta (A/B/C): ");
+            scanf(" %c", &respuesta);
+            respuesta = toupper(respuesta);
+        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
+        
+        send(sock, &respuesta, 1, 0);
     }
     
     // Recibir resultados
-    ssize_t bytes_recibidos = recv(sock, &resultado, sizeof(ResultadoAcademico), 0);
-    if (bytes_recibidos <= 0) {
-        printf("\033[1;31mError al recibir los resultados\033[0m\n");
-        return;
-    }
-    if (bytes_recibidos != sizeof(ResultadoAcademico)) {
-        printf("\033[1;31mError: resultados incompletos\033[0m\n");
-        return;
-    }
+    recv(sock, &resultado, sizeof(ResultadoAcademico), 0);
     
     printf("\n\033[1;34m=== RESULTADOS DEL EXAMEN ACADÉMICO ===\033[0m\n");
     printf("Matemáticas: %d/%d\n", resultado.matematicas, num_mate);
@@ -232,14 +190,9 @@ void realizar_examen_academico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
-<<<<<<< HEAD
-    while (getchar() != '\n');
-=======
->>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
     getchar();
     getchar();
 }
-
 
 void realizar_test_psicometrico(int sock) {
     int total_preguntas;
