@@ -112,74 +112,59 @@ void mostrar_menu() {
 
 void realizar_examen_academico(int sock) {
     int num_mate, num_espanol, num_ingles;
-    recv(sock, &num_mate, sizeof(int), 0);
-    recv(sock, &num_espanol, sizeof(int), 0);
-    recv(sock, &num_ingles, sizeof(int), 0);
+    if (recv(sock, &num_mate, sizeof(int), 0) <= 0 ||
+        recv(sock, &num_espanol, sizeof(int), 0) <= 0 ||
+        recv(sock, &num_ingles, sizeof(int), 0) <= 0) {
+        printf("\033[1;31mError al recibir el número de preguntas\033[0m\n");
+        return;
+    }
     
     Pregunta pregunta;
-    ResultadoAcademico resultado;
-    char buffer[2]; // Buffer para limpiar entrada
+    ResultadoAcademico resultado = {0};
+    char buffer[2];
     
-    limpiar_pantalla();
-    printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
-    for (int i = 0; i < num_mate; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
-        
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
-        
-        char respuesta;
-        do {
-            printf("Tu respuesta (A/B/C): ");
-            scanf(" %c", &respuesta);
-            respuesta = toupper(respuesta);
-        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
-        
-        send(sock, &respuesta, 1, 0);
+    // Función auxiliar para manejar una sección del examen
+    void realizar_seccion(const char* titulo, int num_preguntas) {
+        printf("\n\033[1;32m=== %s ===\033[0m\n\n", titulo);
+        for (int i = 0; i < num_preguntas; i++) {
+            if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
+                printf("\033[1;31mError al recibir la pregunta %d\033[0m\n", i + 1);
+                return;
+            }
+            
+            printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
+            printf("A) %s\n", pregunta.opciones[0]);
+            printf("B) %s\n", pregunta.opciones[1]);
+            printf("C) %s\n", pregunta.opciones[2]);
+            
+            char respuesta;
+            do {
+                printf("Tu respuesta (A/B/C): ");
+                scanf(" %c", &respuesta);
+                respuesta = toupper(respuesta);
+                
+                // Limpiar el buffer de entrada
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF);
+                
+            } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
+            
+            if (send(sock, &respuesta, 1, 0) <= 0) {
+                printf("\033[1;31mError al enviar la respuesta\033[0m\n");
+                return;
+            }
+        }
     }
     
-    printf("\n\033[1;32m=== EXAMEN DE ESPAÑOL ===\033[0m\n\n");
-    for (int i = 0; i < num_espanol; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
-        
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
-        
-        char respuesta;
-        do {
-            printf("Tu respuesta (A/B/C): ");
-            scanf(" %c", &respuesta);
-            respuesta = toupper(respuesta);
-        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
-        
-        send(sock, &respuesta, 1, 0);
-    }
-    
-    printf("\n\033[1;32m=== EXAMEN DE INGLÉS ===\033[0m\n\n");
-    for (int i = 0; i < num_ingles; i++) {
-        recv(sock, &pregunta, sizeof(Pregunta), 0);
-        
-        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
-        printf("A) %s\n", pregunta.opciones[0]);
-        printf("B) %s\n", pregunta.opciones[1]);
-        printf("C) %s\n", pregunta.opciones[2]);
-        
-        char respuesta;
-        do {
-            printf("Tu respuesta (A/B/C): ");
-            scanf(" %c", &respuesta);
-            respuesta = toupper(respuesta);
-        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
-        
-        send(sock, &respuesta, 1, 0);
-    }
+    realizar_seccion("EXAMEN DE MATEMÁTICAS", num_mate);
+    realizar_seccion("EXAMEN DE ESPAÑOL", num_espanol);
+    realizar_seccion("EXAMEN DE INGLÉS", num_ingles);
     
     // Recibir resultados
-    recv(sock, &resultado, sizeof(ResultadoAcademico), 0);
+    if (recv(sock, &resultado, sizeof(ResultadoAcademico), 0) <= 0) {
+        printf("\033[1;31mError al recibir los resultados\033[0m\n");
+        return;
+    }
     
     printf("\n\033[1;34m=== RESULTADOS DEL EXAMEN ACADÉMICO ===\033[0m\n");
     printf("Matemáticas: %d/%d\n", resultado.matematicas, num_mate);
@@ -196,9 +181,9 @@ void realizar_examen_academico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
-    getchar();
+    getchar(); // Esperar Enter
     limpiar_pantalla();
+}
 }
 
 void realizar_test_psicometrico(int sock) {
