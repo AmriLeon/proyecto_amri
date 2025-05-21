@@ -11,9 +11,6 @@
 #define MAX_BUFFER 1024
 #define SERVER_IP "127.0.0.1"
 
-// Prototipo de función
-void limpiar_pantalla();
-
 // Estructura para almacenar datos del usuario
 typedef struct {
     char nombre[50];
@@ -87,9 +84,8 @@ void mostrar_kardex(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
     getchar();
-    limpiar_pantalla();
+    getchar();
 }
 
 // Función para limpiar la pantalla
@@ -126,6 +122,7 @@ void realizar_examen_academico(int sock) {
     }
     
     Pregunta pregunta;
+<<<<<<< HEAD
     ResultadoAcademico resultado = {0};
     
     // Función auxiliar para manejar una sección del examen
@@ -174,6 +171,27 @@ void realizar_examen_academico(int sock) {
             }
         }
         return 1;
+=======
+    ResultadoAcademico resultado;
+    
+    printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
+    for (int i = 0; i < num_mate; i++) {
+        recv(sock, &pregunta, sizeof(Pregunta), 0);
+        
+        printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
+        printf("A) %s\n", pregunta.opciones[0]);
+        printf("B) %s\n", pregunta.opciones[1]);
+        printf("C) %s\n", pregunta.opciones[2]);
+        
+        char respuesta;
+        do {
+            printf("Tu respuesta (A/B/C): ");
+            scanf(" %c", &respuesta);
+            respuesta = toupper(respuesta);
+        } while (respuesta != 'A' && respuesta != 'B' && respuesta != 'C');
+        
+        send(sock, &respuesta, 1, 0);
+>>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
     }
     
     // Realizar cada sección del examen
@@ -214,9 +232,12 @@ void realizar_examen_academico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
+<<<<<<< HEAD
     while (getchar() != '\n');
+=======
+>>>>>>> parent of 61549e4 (refactor(cliente/servidor): improve input handling and question loading)
     getchar();
-    limpiar_pantalla();
+    getchar();
 }
 
 
@@ -272,9 +293,8 @@ void realizar_test_psicometrico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
     getchar();
-    limpiar_pantalla();
+    getchar();
 }
 
 // Función para registrar usuario
