@@ -218,7 +218,7 @@ void realizar_examen_academico(int sock) {
     getchar();
     limpiar_pantalla();
 }
-}
+
 
 void realizar_test_psicometrico(int sock) {
     int total_preguntas;

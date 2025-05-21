@@ -60,6 +60,18 @@ typedef struct {
 #include <time.h>
 
 int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
+    // Verificar si el archivo existe
+    if (access(archivo, F_OK) != 0) {
+        printf("Error: El archivo %s no existe\n", archivo);
+        return 0;
+    }
+
+    // Verificar si el archivo es legible
+    if (access(archivo, R_OK) != 0) {
+        printf("Error: No se tienen permisos de lectura para el archivo %s\n", archivo);
+        return 0;
+    }
+
     FILE* f = fopen(archivo, "r");
     if (!f) {
         printf("Error al abrir el archivo: %s\n", archivo);
@@ -145,7 +157,15 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
     fclose(f);
     
     if (total_preguntas == 0) {
-        printf("No se encontraron preguntas válidas en el archivo: %s\n", archivo);
+        printf("Error: No se encontraron preguntas válidas en el archivo %s. Verifique el formato del archivo\n", archivo);
+        fclose(f);
+        return 0;
+    }
+
+    // Verificar que el archivo no esté vacío
+    if (ftell(f) == 0) {
+        printf("Error: El archivo %s está vacío\n", archivo);
+        fclose(f);
         return 0;
     }
     
