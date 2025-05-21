@@ -11,6 +11,9 @@
 #define MAX_BUFFER 1024
 #define SERVER_IP "127.0.0.1"
 
+// Prototipo de función
+void limpiar_pantalla();
+
 // Estructura para almacenar datos del usuario
 typedef struct {
     char nombre[50];
@@ -84,8 +87,9 @@ void mostrar_kardex(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
+    while (getchar() != '\n'); // Limpiar el buffer de entrada
     getchar();
-    getchar();
+    limpiar_pantalla();
 }
 
 // Función para limpiar la pantalla
@@ -114,7 +118,9 @@ void realizar_examen_academico(int sock) {
     
     Pregunta pregunta;
     ResultadoAcademico resultado;
+    char buffer[2]; // Buffer para limpiar entrada
     
+    limpiar_pantalla();
     printf("\033[1;32m=== EXAMEN DE MATEMÁTICAS ===\033[0m\n\n");
     for (int i = 0; i < num_mate; i++) {
         recv(sock, &pregunta, sizeof(Pregunta), 0);
@@ -190,8 +196,9 @@ void realizar_examen_academico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
+    while (getchar() != '\n'); // Limpiar el buffer de entrada
     getchar();
-    getchar();
+    limpiar_pantalla();
 }
 
 void realizar_test_psicometrico(int sock) {
@@ -246,8 +253,9 @@ void realizar_test_psicometrico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
+    while (getchar() != '\n'); // Limpiar el buffer de entrada
     getchar();
-    getchar();
+    limpiar_pantalla();
 }
 
 // Función para registrar usuario
