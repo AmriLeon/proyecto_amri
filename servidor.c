@@ -27,6 +27,9 @@ typedef struct {
     char fecha[20];
 } ResultadoPsicometrico;
 
+// Prototipos de funciones
+void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico);
+
 // Estructura para almacenar datos del usuario
 typedef struct {
     char nombre[50];
@@ -45,8 +48,21 @@ typedef struct {
     char respuesta;
 } Pregunta;
 
-// Prototipos de funciones
-void guardar_kardex(const char* matricula, ResultadoAcademico* resultado_academico, ResultadoPsicometrico* resultado_psicometrico);
+// Estructura para resultados del examen académico
+typedef struct {
+    int matematicas;
+    int espanol;
+    int ingles;
+    float promedio;
+} ResultadoAcademico;
+
+// Estructura para resultados del test psicométrico
+typedef struct {
+    int correctas;
+    int total;
+    float porcentaje;
+    char fecha[20];
+} ResultadoPsicometrico;
 
 // Estructura para el kardex completo
 typedef struct {
