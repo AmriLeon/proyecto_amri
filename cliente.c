@@ -119,17 +119,36 @@ void realizar_examen_academico(int sock) {
         return;
     }
     
+    // Verificar que se recibieron números válidos de preguntas
+    if (num_mate <= 0 || num_espanol <= 0 || num_ingles <= 0) {
+        printf("\033[1;31mNúmero de preguntas inválido recibido del servidor\033[0m\n");
+        return;
+    }
+    
     Pregunta pregunta;
     ResultadoAcademico resultado = {0};
-    char buffer[2];
     
     // Función auxiliar para manejar una sección del examen
-    void realizar_seccion(const char* titulo, int num_preguntas) {
+    int realizar_seccion(const char* titulo, int num_preguntas) {
         printf("\n\033[1;32m=== %s ===\033[0m\n\n", titulo);
         for (int i = 0; i < num_preguntas; i++) {
-            if (recv(sock, &pregunta, sizeof(Pregunta), 0) <= 0) {
+            ssize_t bytes_recibidos = recv(sock, &pregunta, sizeof(Pregunta), 0);
+            if (bytes_recibidos <= 0) {
                 printf("\033[1;31mError al recibir la pregunta %d\033[0m\n", i + 1);
-                return;
+                return 0;
+            }
+            if (bytes_recibidos != sizeof(Pregunta)) {
+                printf("\033[1;31mError: datos de pregunta incompletos\033[0m\n");
+                return 0;
+            }
+            
+            // Validar que la pregunta y opciones no estén vacías
+            if (strlen(pregunta.pregunta) == 0 || 
+                strlen(pregunta.opciones[0]) == 0 ||
+                strlen(pregunta.opciones[1]) == 0 ||
+                strlen(pregunta.opciones[2]) == 0) {
+                printf("\033[1;31mError: pregunta o opciones inválidas\033[0m\n");
+                return 0;
             }
             
             printf("\nPregunta %d:\n%s\n", i + 1, pregunta.pregunta);
@@ -151,18 +170,32 @@ void realizar_examen_academico(int sock) {
             
             if (send(sock, &respuesta, 1, 0) <= 0) {
                 printf("\033[1;31mError al enviar la respuesta\033[0m\n");
-                return;
+                return 0;
             }
         }
+        return 1;
     }
     
-    realizar_seccion("EXAMEN DE MATEMÁTICAS", num_mate);
-    realizar_seccion("EXAMEN DE ESPAÑOL", num_espanol);
-    realizar_seccion("EXAMEN DE INGLÉS", num_ingles);
+    // Realizar cada sección del examen
+    if (!realizar_seccion("EXAMEN DE MATEMÁTICAS", num_mate) ||
+        !realizar_seccion("EXAMEN DE ESPAÑOL", num_espanol) ||
+        !realizar_seccion("EXAMEN DE INGLÉS", num_ingles)) {
+        printf("\033[1;31mEl examen no pudo completarse debido a errores\033[0m\n");
+        printf("\nPresiona Enter para continuar...");
+        while (getchar() != '\n');
+        getchar();
+        limpiar_pantalla();
+        return;
+    }
     
     // Recibir resultados
-    if (recv(sock, &resultado, sizeof(ResultadoAcademico), 0) <= 0) {
+    ssize_t bytes_recibidos = recv(sock, &resultado, sizeof(ResultadoAcademico), 0);
+    if (bytes_recibidos <= 0) {
         printf("\033[1;31mError al recibir los resultados\033[0m\n");
+        return;
+    }
+    if (bytes_recibidos != sizeof(ResultadoAcademico)) {
+        printf("\033[1;31mError: resultados incompletos\033[0m\n");
         return;
     }
     
@@ -181,7 +214,8 @@ void realizar_examen_academico(int sock) {
     }
     
     printf("\nPresiona Enter para continuar...");
-    getchar(); // Esperar Enter
+    while (getchar() != '\n');
+    getchar();
     limpiar_pantalla();
 }
 }

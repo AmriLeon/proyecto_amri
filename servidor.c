@@ -60,7 +60,7 @@ typedef struct {
 #include <time.h>
 
 int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
-     FILE* f = fopen(archivo, "r");
+    FILE* f = fopen(archivo, "r");
     if (!f) {
         printf("Error al abrir el archivo: %s\n", archivo);
         return 0;
@@ -76,45 +76,66 @@ int cargar_preguntas(const char* archivo, Pregunta* preguntas) {
     int total_preguntas = 0;
     char linea[512];
     
-    while (total_preguntas < MAX_PREGUNTAS * 2 && fgets(linea, sizeof(linea), f)) {
-        // Eliminar el salto de línea final si existe
+    while (total_preguntas < MAX_PREGUNTAS * 2) {
+        // Leer la pregunta
+        if (!fgets(linea, sizeof(linea), f)) break;
+        
+        // Eliminar el salto de línea y espacios en blanco
         size_t len = strlen(linea);
-        if (len > 0 && linea[len-1] == '\n') {
-            linea[len-1] = '\0';
-            len--;
+        while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
+            linea[--len] = '\0';
         }
         
         if (len <= 1) continue;
         
-        // Copiar la pregunta eliminando posibles caracteres no deseados
+        // Verificar que la pregunta no esté vacía
+        if (strlen(linea) == 0) continue;
+        
+        // Copiar la pregunta
         strncpy(todas_preguntas[total_preguntas].pregunta, linea, sizeof(todas_preguntas[total_preguntas].pregunta) - 1);
         todas_preguntas[total_preguntas].pregunta[sizeof(todas_preguntas[total_preguntas].pregunta) - 1] = '\0';
         
-        // Leer opciones
+        // Leer y validar las tres opciones
         int opciones_leidas = 0;
+        int opciones_validas = 1;
+        
         for (int i = 0; i < 3; i++) {
-            if (!fgets(linea, sizeof(linea), f)) break;
+            if (!fgets(linea, sizeof(linea), f)) {
+                opciones_validas = 0;
+                break;
+            }
             
-            // Eliminar el salto de línea final
+            // Eliminar el salto de línea y espacios en blanco
             len = strlen(linea);
-            if (len > 0 && linea[len-1] == '\n') {
-                linea[len-1] = '\0';
-                len--;
+            while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
+                linea[--len] = '\0';
             }
             
-            if (len > 2 && linea[0] == 'A' + i && linea[1] == ')') {
-                strncpy(todas_preguntas[total_preguntas].opciones[i], linea + 3, sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1);
-                todas_preguntas[total_preguntas].opciones[i][sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1] = '\0';
-                opciones_leidas++;
+            // Validar formato de opción (A), B), C))
+            if (len < 3 || linea[0] != 'A' + i || linea[1] != ')' || linea[2] != ' ') {
+                opciones_validas = 0;
+                break;
             }
+            
+            // Copiar la opción sin el prefijo
+            strncpy(todas_preguntas[total_preguntas].opciones[i], linea + 3, sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1);
+            todas_preguntas[total_preguntas].opciones[i][sizeof(todas_preguntas[total_preguntas].opciones[i]) - 1] = '\0';
+            opciones_leidas++;
         }
         
-        // Leer respuesta
-        if (fgets(linea, sizeof(linea), f) && opciones_leidas == 3) {
-            if (strncmp(linea, "RESPUESTA:", 10) == 0) {
-                todas_preguntas[total_preguntas].respuesta = toupper(linea[10]);
-                if (todas_preguntas[total_preguntas].respuesta >= 'A' && 
-                    todas_preguntas[total_preguntas].respuesta <= 'C') {
+        // Leer y validar la respuesta
+        if (opciones_validas && opciones_leidas == 3 && fgets(linea, sizeof(linea), f)) {
+            // Eliminar el salto de línea y espacios en blanco
+            len = strlen(linea);
+            while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r' || linea[len-1] == ' ')) {
+                linea[--len] = '\0';
+            }
+            
+            // Validar formato de respuesta
+            if (strncmp(linea, "RESPUESTA: ", 11) == 0) {
+                char respuesta = toupper(linea[10]);
+                if (respuesta >= 'A' && respuesta <= 'C') {
+                    todas_preguntas[total_preguntas].respuesta = respuesta;
                     total_preguntas++;
                 }
             }
